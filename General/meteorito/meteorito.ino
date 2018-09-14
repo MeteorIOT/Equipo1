@@ -14,22 +14,40 @@ void setup() {
   dht.begin(); //inicio del sensor de temperatura
   sensorPresion.begin(); //inicio del sensor de presion
 }
-
-float kelvin(){
-  temperatura = dht.readTemperature(); //leer temperatura
-  return temperatura+273; //añadir 273 para pasar a kelvin
-  }
-
+//TEMPERATURA
 float celsius(){
   temperatura = dht.readTemperature();    //Se guarda la lectura de temperatura en la variable "temperatura"
   return temperatura;
   }
+float kelvin(float celsius){
+  return celsius+273; //añadir 273 para pasar a kelvin
+  }
+
+float fahrenheit(float celsius){
+  float f = dht.readTemperature(true);
+  return f;
+  }
+void temp_sens(float fahrenheit){
+  float fi = dht.readTemperature(true);
+  float hi = dht.computeHeatIndex(fahrenheit, humedad);
+  float hiDegC = dht.convertFtoC(hi);
+  Serial.print("Sensación térmica: ");
+  Serial.print(hiDegC);
+  Serial.println(" C");
+  }
 void temperature(){ //metodo de temperatura
-  Serial.print("Kelvin : ");
-  Serial.print(kelvin());
-  Serial.println(" K");
   Serial.print("Celsius : ");
   Serial.print(celsius());
+  Serial.println(" C");
+  Serial.print("Fahrenheit :");
+  Serial.print(fahrenheit(celsius()));
+  Serial.println("F");
+  Serial.print("Kelvin : ");
+  Serial.print(kelvin(celsius()));
+  Serial.println(" K");
+  temp_sens(fahrenheit(celsius()));
+  Serial.print("Punto de rocío: ");
+  Serial.print(dewPoint(fahrenheit(celsius()), humedad));
   Serial.println(" C");
   }
 void pressure(){ //metodo de presion
@@ -58,4 +76,22 @@ void loop(){
   humidity();
   Serial.println("-----------------------------");
   delay(1500);
+}
+//extra
+double dewPoint(double celsius, double humidity) //funcion para el punto de rocio
+{
+  // (1) Saturation Vapor Pressure = ESGG(T)
+  double RATIO = 373.15 / (273.15 + celsius);
+  double RHS = -7.90298 * (RATIO - 1);
+  RHS += 5.02808 * log10(RATIO);
+  RHS += -1.3816e-7 * (pow(10, (11.344 * (1 - 1 / RATIO ))) - 1) ;
+  RHS += 8.1328e-3 * (pow(10, (-3.49149 * (RATIO - 1))) - 1) ;
+  RHS += log10(1013.246);
+
+  // factor -3 is to adjust units - Vapor Pressure SVP * humidity
+  double VP = pow(10, RHS - 3) * humidity;
+
+  // (2) DEWPOINT = F(Vapor Pressure)
+  double T = log(VP / 0.61078); // temp var
+  return (241.88 * T) / (17.558 - T);
 }

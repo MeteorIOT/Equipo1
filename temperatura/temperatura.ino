@@ -18,12 +18,12 @@ void setup() {
   dht.begin();              // Inicia el sensor
 }
 
-int kelvin(){
+float kelvin(){
   temperatura = dht.readTemperature();
   return temperatura+273;
   }
 
-int celsius(){
+float celsius(){
   temperatura = dht.readTemperature();    //Se guarda la lectura de temperatura en la variable "temperatura"
   return temperatura;
   }
